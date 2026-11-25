@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+sync/.garth
+sync/__pycache__
+*.local
