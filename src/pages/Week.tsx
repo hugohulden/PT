@@ -28,7 +28,7 @@ export default function Week() {
   const warnings = scheduleWarnings(sessions);
   const doneCount = sessions.filter((x) => x.status === 'done').length;
   const total = sessions.filter((x) => x.kind !== 'rest').length;
-  const dirty = sessions.some((x) => x.garminDirty);
+  const dirty = sessions.some((x) => x.garminDirty && x.garminExported);
 
   const go = (w: number) => nav(`/vecka/${w}`, { replace: true });
 
@@ -74,7 +74,7 @@ export default function Week() {
           </Link>
         )}
         {dirty && (
-          <Link to={`/garmin?vecka=${week}&uppdatering=1`} className="btn btn-outline mt-2 w-full">
+          <Link to={`/garmin?vecka=${week}`} className="btn btn-outline mt-2 w-full">
             Pass har ändrats – skicka uppdatering
           </Link>
         )}

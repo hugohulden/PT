@@ -25,9 +25,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest requests && cd sync && python -m pytest -q
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+          # Publika värden (anon-nyckeln är gjord för att ligga i klienten; RLS skyddar datan)
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       # Gör att direktlänkar (t.ex. /pt/vecka) fungerar på GitHub Pages
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

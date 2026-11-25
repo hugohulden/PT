@@ -7,3 +7,6 @@ sync/.garth
 sync/__pycache__
 *.local
 dist-preview
+.pytest_cache
+__pycache__
+garmin_tokens.json

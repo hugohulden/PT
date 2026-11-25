@@ -13,6 +13,18 @@ import Plan from './pages/Plan';
 import SettingsPage from './pages/Settings';
 import Progress from './pages/Progress';
 import Placeholder from './pages/Placeholder';
+import Garmin from './pages/Garmin';
+import Sync from './pages/Sync';
+import Import from './pages/Import';
+import PullUp from './pages/PullUp';
+import Weight from './pages/Weight';
+import Health from './pages/Health';
+import Badges from './pages/Badges';
+import { startAutoSync } from './sync/cloud';
+import { evaluateBadges } from './lib/badges';
+import { matchActivities } from './lib/importer';
+import { celebrate } from './lib/fx';
+import { Toast } from './components/ui';
 import InstallGuide from './components/InstallGuide';
 
 const TABS = [
@@ -25,12 +37,29 @@ const TABS = [
 
 export default function App() {
   const [ready, setReady] = useState(false);
+  const [badgeToast, setBadgeToast] = useState<string | null>(null);
   const settings = useSettings();
   useTheme(settings.theme);
   const active = useLiveQuery(() => db.workoutLogs.where('status').equals('active').count(), []);
 
+  // Nya märken: kolla när data ändras (loggade set, synkad Garmin-data, avslutade pass)
+  const dataStamp = useLiveQuery(async () => `${await db.setLogs.count()}|${await db.activities.count()}|${await db.health.count()}|${await db.workoutLogs.where('status').equals('done').count()}|${await db.prs.count()}`, []);
   useEffect(() => {
-    ensureInitialized().then(() => setReady(true));
+    if (!ready || !dataStamp) return;
+    void evaluateBadges().then((nb) => {
+      if (!nb.length) return;
+      celebrate(nb.some((b) => b.id === 'pu-first') ? 'milestone' : nb.some((b) => b.group === 'vecka' || b.id === 'run-calm-week') ? 'hearts' : 'pr');
+      setBadgeToast(`Nytt märke: ${nb.map((b) => `${b.icon} ${b.name}`).join(', ')}!`);
+    });
+  }, [ready, dataStamp]);
+
+  useEffect(() => {
+    ensureInitialized()
+      .then(() => matchActivities())
+      .then(() => {
+        setReady(true);
+        startAutoSync();
+      });
     // Be iOS att inte rensa lagringen
     void navigator.storage?.persist?.();
   }, []);
@@ -55,9 +84,17 @@ export default function App() {
         <Route path="/mer" element={<More />} />
         <Route path="/plan" element={<Plan />} />
         <Route path="/installningar" element={<SettingsPage />} />
+        <Route path="/garmin" element={<Garmin />} />
+        <Route path="/synk" element={<Sync />} />
+        <Route path="/import" element={<Import />} />
+        <Route path="/pullup" element={<PullUp />} />
+        <Route path="/vikt" element={<Weight />} />
+        <Route path="/halsa" element={<Health />} />
+        <Route path="/marken" element={<Badges />} />
         <Route path="*" element={<Placeholder />} />
       </Routes>
       {import.meta.env.VITE_PREVIEW !== '1' && <InstallGuide />}
+      <Toast msg={badgeToast} onDone={() => setBadgeToast(null)} />
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line backdrop-blur-xl safe-bottom"
         style={{ background: 'color-mix(in srgb, var(--surface) 88%, transparent)' }}
