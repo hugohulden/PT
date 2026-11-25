@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*.png', 'splash/*.png'],
+      includeAssets: ['icons/*.png'],
       manifest: {
         name: 'Nellies träning',
         short_name: 'Träning',
@@ -29,6 +29,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        globIgnores: ['splash/**'],
         navigateFallback: '/index.html',
       },
     }),

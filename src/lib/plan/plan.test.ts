@@ -56,6 +56,10 @@ describe('plangenerator', () => {
     for (const p of plan) if (isoWeekday(p.date) === 7) expect(p.kind).toBe('rest');
   });
 
+  it('alla pass-id är unika', () => {
+    expect(new Set(plan.map((p) => p.id)).size).toBe(plan.length);
+  });
+
   it('loppet ligger på loppdagen', () => {
     const race = plan.find((p) => p.kind === 'race')!;
     expect(race.date).toBe('2027-05-22');

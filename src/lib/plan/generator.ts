@@ -1,4 +1,4 @@
-import { addDays, dayShort, pad2, weekStart, type ISODate } from '../dates';
+import { addDays, dayShort, isoWeekday, pad2, weekStart, type ISODate } from '../dates';
 import type { Phase, PlannedSession, SessionKind, Settings } from '../types';
 import { buildStrength } from './strength';
 import { easyRun, longRun, qualityRun, qualityTitle } from './running';
@@ -71,6 +71,17 @@ function shortLabel(kind: SessionKind, extra: Partial<PlannedSession>, title: st
 }
 
 export function generateWeek(s: Settings, week: number): PlannedSession[] {
+  return uniqueIds(generateWeekRaw(s, week));
+}
+
+/** Två pass av samma sort i en vecka (t.ex. två vilodagar) får veckodagen i id:t. */
+function uniqueIds(list: PlannedSession[]): PlannedSession[] {
+  const count = new Map<string, number>();
+  for (const x of list) count.set(x.id, (count.get(x.id) ?? 0) + 1);
+  return list.map((x) => ((count.get(x.id) ?? 0) > 1 ? { ...x, id: `${x.id}-${isoWeekday(x.date)}` } : x));
+}
+
+function generateWeekRaw(s: Settings, week: number): PlannedSession[] {
   const phase = phaseOf(s, week);
   if (!phase) return [];
   const wd = s.weekdays;
