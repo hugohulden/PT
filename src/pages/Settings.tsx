@@ -88,6 +88,8 @@ export default function SettingsPage() {
         <QuoteEditor quotes={s.customQuotes} onSave={(q) => save({ customQuotes: q })} />
       </Section>
 
+      <ResetSection />
+
       <Section title="Backup">
         <p className="text-soft mb-2 text-sm">Allt sparas i telefonen och synkas till molnet när inloggning är på. Exportera ändå en backup ibland 💾</p>
         <button className="btn btn-primary w-full" onClick={exportBackup}>
@@ -199,5 +201,37 @@ function QuoteEditor({ quotes, onSave }: { quotes: string[]; onSave: (q: string[
         </button>
       </div>
     </div>
+  );
+}
+
+function ResetSection() {
+  const [step, setStep] = useState(0);
+  return (
+    <Section title="Börja om">
+      <p className="text-soft mb-2 text-sm">
+        Raderar all data i den här webbläsaren (pass, vikter, importer, inställningar) och skapar planen på nytt. Bra om du har testat appen eller importerat fel persons data. Påverkar inte andra telefoner.
+      </p>
+      {step === 0 && (
+        <button className="btn btn-outline w-full" onClick={() => setStep(1)}>
+          Radera all data här…
+        </button>
+      )}
+      {step === 1 && (
+        <div className="grid grid-cols-2 gap-2">
+          <button className="btn btn-ghost" onClick={() => setStep(0)}>
+            Avbryt
+          </button>
+          <button
+            className="btn bg-[#9a1b1b] text-white"
+            onClick={async () => {
+              await db.delete();
+              location.reload();
+            }}
+          >
+            Ja, radera allt
+          </button>
+        </div>
+      )}
+    </Section>
   );
 }
