@@ -44,7 +44,7 @@ export const EXERCISES: Exercise[] = [
   { id: 'band-pullup', name: 'Pull-up med gummiband', category: 'pullup', garmin: { category: 'PULL_UP', name: 'BAND_ASSISTED_PULL_UP' }, alternatives: ['assisted-pullup'], increment: 0, unit: 'reps', bodyweight: true },
   { id: 'inverted-row', name: 'Inverterad rodd', category: 'pullup', garmin: { category: 'ROW', name: 'INVERTED_ROW' }, alternatives: ['db-row'], increment: 0, unit: 'reps', bodyweight: true },
   { id: 'flexed-hang', name: 'Hängande med böjda armar', category: 'pullup', garmin: { category: 'PULL_UP' }, alternatives: [], increment: 0, unit: 'seconds', bodyweight: true, cue: 'Hakan över stången, hoppa upp i läget' },
-  { id: 'negative-pullup', name: 'Negativa pull-ups', category: 'pullup', garmin: { category: 'PULL_UP', name: 'PULL_UP' }, alternatives: [], increment: 0, unit: 'reps', bodyweight: true, cue: 'Hoppa upp, sänk dig så långsamt du kan' },
+  { id: 'negative-pullup', name: 'Negativa pull-ups', category: 'pullup', garmin: { category: 'PULL_UP', name: 'PULL_UP' }, alternatives: [], increment: 0, unit: 'seconds', bodyweight: true, cue: 'Hoppa upp, sänk dig så långsamt du kan. Logga sekunder ner per rep.' },
   { id: 'iso-holds', name: 'Isometriska håll (topp, 90°, 120°)', category: 'pullup', garmin: { category: 'PULL_UP' }, alternatives: [], increment: 0, unit: 'seconds', bodyweight: true },
   { id: 'pullup', name: 'Pull-up', category: 'pullup', garmin: { category: 'PULL_UP', name: 'PULL_UP' }, alternatives: [], increment: 0, unit: 'reps', bodyweight: true },
 

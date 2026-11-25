@@ -48,14 +48,14 @@ export function pullupBlock(week: number, day: 'A' | 'B'): StrengthItem[] {
     return day === 'A'
       ? [sec('flexed-hang', 3, 10, 20, 'pullup', { ...r, note: 'Hakan över stången' }), sec('dead-hang', 2, 20, 40, 'pullup', r)]
       : [
-          it('negative-pullup', 3, 3, 3, 'pullup', { ...r, note: '3–5 s ner' }),
+          sec('negative-pullup', 3, 3, 5, 'pullup', { ...r, note: '3 reps per set – logga sekunder ner per rep' }),
           it('assisted-pullup', 3, 6, 8, 'pullup', { ...r, note: 'Försök sänka motvikten lite' }),
         ];
   }
   if (step === 3) {
     return day === 'A'
       ? [
-          it('negative-pullup', 4, 3, 3, 'pullup', { ...r, note: '5–8 s ner' }),
+          sec('negative-pullup', 4, 5, 8, 'pullup', { ...r, note: '3 reps per set – logga sekunder ner per rep' }),
           sec('iso-holds', 3, 5, 10, 'pullup', { ...r, note: 'Ett håll i varje läge: topp, 90°, 120°' }),
         ]
       : [it('assisted-pullup', 4, 4, 5, 'pullup', { ...r, note: 'Låg motvikt eller lätt gummiband' })];
@@ -63,7 +63,7 @@ export function pullupBlock(week: number, day: 'A' | 'B'): StrengthItem[] {
   return day === 'A'
     ? [it('pullup', 5, 1, 1, 'pullup', { restSec: 20, note: 'Kluster: 1 rep + 20 s vila × 5. Assistans eller negativ om det tar stopp.' })]
     : [
-        it('negative-pullup', 3, 3, 3, 'pullup', { ...r, note: '5–8 s ner' }),
+        sec('negative-pullup', 3, 5, 8, 'pullup', { ...r, note: '3 reps per set – logga sekunder ner per rep' }),
         it('pullup', 1, 1, 3, 'pullup', { note: 'Greasing the groove: 1 lätt försök flera gånger om dagen, aldrig till utmattning' }),
       ];
 }

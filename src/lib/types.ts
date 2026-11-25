@@ -151,6 +151,8 @@ export interface PlannedSession {
   userModified?: boolean;
   /** Ändrad efter senaste Garmin-export, behöver uppdateringsfil */
   garminDirty?: boolean;
+  /** Hur passet såg ut när det senast skickades till Garmin */
+  garminExported?: { name: string; date: ISODate; at: number };
   updatedAt: number;
 }
 

@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS } from '../lib/settings';
 import { generatePlan, mergePlan } from '../lib/plan/generator';
 import { exercise } from '../lib/exercises';
 import { suggestWeight, type WeightSuggestion } from '../lib/rules';
-import { today, type ISODate } from '../lib/dates';
+import { dayShort, today, type ISODate } from '../lib/dates';
 import type { PlannedSession, PR, SessionKind, SetLog, Settings, StrengthItem, WorkoutLog } from '../lib/types';
 
 // ---------------------------------------------------------------------------
@@ -62,6 +62,7 @@ export async function moveSession(id: string, date: ISODate) {
   await updateSession(id, {
     date,
     status: date === cur.originalDate ? 'planned' : 'moved',
+    garminName: cur.garminName?.replace(/^(RK V\d\d) \S+ –/, `$1 ${dayShort(date)} –`),
     garminDirty: cur.garminName ? true : cur.garminDirty,
   });
 }
