@@ -57,7 +57,7 @@ export default function App() {
         <Route path="/installningar" element={<SettingsPage />} />
         <Route path="*" element={<Placeholder />} />
       </Routes>
-      <InstallGuide />
+      {import.meta.env.VITE_PREVIEW !== '1' && <InstallGuide />}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line backdrop-blur-xl safe-bottom"
         style={{ background: 'color-mix(in srgb, var(--surface) 88%, transparent)' }}

@@ -6,3 +6,4 @@ dist
 sync/.garth
 sync/__pycache__
 *.local
+dist-preview

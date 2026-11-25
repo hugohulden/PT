@@ -13,6 +13,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      disable: process.env.VITE_PREVIEW === '1',
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
