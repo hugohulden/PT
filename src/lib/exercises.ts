@@ -76,10 +76,36 @@ export const EXERCISES: Exercise[] = [
 
 export const EXERCISE_MAP: Record<string, Exercise> = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
+// Egna övningar (skapade av henne i appen). Fylls från databasen vid start.
+const CUSTOM: Record<string, Exercise> = {};
+
+export type CustomKind = 'weight' | 'reps' | 'seconds';
+
+export function customExercise(id: string, name: string, kind: CustomKind): Exercise {
+  return {
+    id,
+    name,
+    category: 'rumpa',
+    garmin: { category: '' },
+    alternatives: [],
+    increment: kind === 'weight' ? 2.5 : 0,
+    unit: kind === 'seconds' ? 'seconds' : 'reps',
+    bodyweight: kind !== 'weight' || undefined,
+    custom: true,
+  };
+}
+
+export function registerCustomExercises(list: Exercise[]) {
+  for (const k of Object.keys(CUSTOM)) delete CUSTOM[k];
+  for (const e of list) CUSTOM[e.id] = e;
+}
+
+export const customExercises = () => Object.values(CUSTOM).sort((a, b) => a.name.localeCompare(b.name, 'sv'));
+
 export function exercise(id: string): Exercise {
-  const e = EXERCISE_MAP[id];
-  if (!e) throw new Error(`Okänd övning: ${id}`);
-  return e;
+  const e = EXERCISE_MAP[id] ?? CUSTOM[id];
+  // Okänd (t.ex. en egen övning som inte hunnit laddas): visa ändå något vettigt
+  return e ?? customExercise(id, id.replace(/^custom-/, '').replace(/-/g, ' '), 'weight');
 }
 
 /** Alternativ som går att byta till – aldrig uteslutna övningar. */
@@ -96,7 +122,7 @@ export function alternativesFor(id: string): Exercise[] {
 /** Försök känna igen en övning från fritext (import). */
 export function matchExerciseName(raw: string): Exercise | undefined {
   const s = raw.trim().toLowerCase();
-  const exact = EXERCISES.find((e) => e.name.toLowerCase() === s || e.id === s);
+  const exact = [...EXERCISES, ...customExercises()].find((e) => e.name.toLowerCase() === s || e.id === s);
   if (exact) return exact;
   const aliases: [RegExp, string][] = [
     [/hip ?thrust/, 'hip-thrust'],

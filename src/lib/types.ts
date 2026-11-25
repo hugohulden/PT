@@ -172,6 +172,9 @@ export interface Exercise {
   bodyweight?: boolean;
   excluded?: boolean;
   cue?: string;
+  /** Egen övning skapad i appen */
+  custom?: boolean;
+  updatedAt?: number;
 }
 
 export interface SetLog {

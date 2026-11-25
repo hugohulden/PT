@@ -21,6 +21,7 @@ import Weight from './pages/Weight';
 import Health from './pages/Health';
 import Badges from './pages/Badges';
 import { startAutoSync } from './sync/cloud';
+import { registerCustomExercises } from './lib/exercises';
 import { evaluateBadges } from './lib/badges';
 import { matchActivities } from './lib/importer';
 import { celebrate } from './lib/fx';
@@ -41,6 +42,12 @@ export default function App() {
   const settings = useSettings();
   useTheme(settings.theme);
   const active = useLiveQuery(() => db.workoutLogs.where('status').equals('active').count(), []);
+
+  // Egna övningar (synkas mellan enheter) görs kända för resten av appen
+  const customs = useLiveQuery(() => db.customExercises.toArray(), []);
+  useEffect(() => {
+    if (customs) registerCustomExercises(customs);
+  }, [customs]);
 
   // Nya märken: kolla när data ändras (loggade set, synkad Garmin-data, avslutade pass)
   const dataStamp = useLiveQuery(async () => `${await db.setLogs.count()}|${await db.activities.count()}|${await db.health.count()}|${await db.workoutLogs.where('status').equals('done').count()}|${await db.prs.count()}`, []);

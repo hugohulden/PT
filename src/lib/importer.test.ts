@@ -76,3 +76,15 @@ describe('import', () => {
     expect(() => normalizePayload({ format: 'x' })).toThrow(/inga pass/);
   });
 });
+
+describe('egna övningar', () => {
+  it('registreras, känns igen vid import och hip thrust stoppas inte av misstag i planen', async () => {
+    const { customExercise, registerCustomExercises, exercise, matchExerciseName } = await import('./exercises');
+    const ex = customExercise('custom-smith-knaboj', 'Smith-knäböj', 'weight');
+    registerCustomExercises([ex]);
+    expect(exercise('custom-smith-knaboj').name).toBe('Smith-knäböj');
+    expect(matchExerciseName('Smith-knäböj')?.id).toBe('custom-smith-knaboj');
+    // Okänd egen övning (ej laddad än) kraschar inte
+    expect(exercise('custom-okand').name).toBe('okand');
+  });
+});

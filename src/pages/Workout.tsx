@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { db, uid } from '../db/db';
 import { deleteSet, detectPrs, finishWorkout, prefillFor, saveSet, workoutSummary, type Prefill } from '../db/repo';
 import { useSettings } from '../hooks';
-import { alternativesFor, exercise } from '../lib/exercises';
+import { alternativesFor, customExercise, exercise, registerCustomExercises, type CustomKind } from '../lib/exercises';
+import type { Exercise } from '../lib/types';
 import { celebrate, chime, keepAwake, reacquireOnVisible, unlockAudio } from '../lib/fx';
 import { fmtDuration, prettyDate } from '../lib/dates';
 import { buildStrength } from '../lib/plan/strength';
@@ -227,11 +228,9 @@ function ExerciseCard({
           {prefill?.suggestion.reason && <p className="text-accent text-sm font-semibold">{prefill.suggestion.reason}</p>}
           {!lastText && !ex.bodyweight && <p className="text-soft text-sm">Första gången – välj en vikt som känns som RPE 7 ✨</p>}
         </div>
-        {(alts.length > 0 || workout.swaps[slot]) && (
-          <button className="btn btn-ghost px-3 text-sm" onClick={() => setSwapOpen(true)} aria-label={`Byt ${ex.name}`}>
-            ⇄ Byt
-          </button>
-        )}
+        <button className="btn btn-ghost px-3 text-sm" onClick={() => setSwapOpen(true)} aria-label={`Byt ${ex.name}`}>
+          ⇄ Byt
+        </button>
       </div>
 
       <div className="mt-3 space-y-2">
@@ -289,32 +288,26 @@ function ExerciseCard({
         </button>
       </div>
 
-      <Sheet open={swapOpen} onClose={() => setSwapOpen(false)} title={`Byt ut ${exercise(item.exerciseId).name.toLowerCase()}`}>
-        <p className="text-soft mb-2 text-sm">Historiken sparas per övning, så inget försvinner.</p>
-        <div className="space-y-2">
-          {[exercise(item.exerciseId), ...alts].map((a) => (
-            <button
-              key={a.id}
-              className={`card-soft block w-full text-left font-semibold ${a.id === exId ? 'ring-2 ring-pink' : ''}`}
-              onClick={async () => {
-                const swaps = { ...workout.swaps };
-                if (a.id === item.exerciseId) delete swaps[slot];
-                else swaps[slot] = a.id;
-                // Ta bort ej klara utkast så att nya förifylls för den valda övningen
-                const drafts = mine.filter((x) => !x.done);
-                await db.transaction('rw', db.workoutLogs, db.setLogs, async () => {
-                  await db.workoutLogs.update(workout.id, { swaps, updatedAt: Date.now() });
-                  for (const d of drafts) await db.setLogs.update(d.id, { deleted: true, updatedAt: Date.now() });
-                });
-                inited.current = '';
-                setSwapOpen(false);
-              }}
-            >
-              {a.name}
-            </button>
-          ))}
-        </div>
-      </Sheet>
+      <SwapSheet
+        open={swapOpen}
+        onClose={() => setSwapOpen(false)}
+        original={item.exerciseId}
+        current={exId}
+        alts={alts}
+        onPick={async (id) => {
+          const swaps = { ...workout.swaps };
+          if (id === item.exerciseId) delete swaps[slot];
+          else swaps[slot] = id;
+          // Ta bort ej klara utkast så att nya förifylls för den valda övningen
+          const drafts = mine.filter((x) => !x.done);
+          await db.transaction('rw', db.workoutLogs, db.setLogs, async () => {
+            await db.workoutLogs.update(workout.id, { swaps, updatedAt: Date.now() });
+            for (const d of drafts) await db.setLogs.update(d.id, { deleted: true, updatedAt: Date.now() });
+          });
+          inited.current = '';
+          setSwapOpen(false);
+        }}
+      />
 
       <Sheet open={noteOpen} onClose={() => setNoteOpen(false)} title={ex.name}>
         <p className="mb-2 font-semibold">Hur tungt kändes det? (RPE, valfritt)</p>
@@ -551,5 +544,112 @@ function Summary({ summary, name, onClose }: { summary: Awaited<ReturnType<typeo
         Till startsidan
       </button>
     </Page>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function SwapSheet({
+  open,
+  onClose,
+  original,
+  current,
+  alts,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  original: string;
+  current: string;
+  alts: Exercise[];
+  onPick: (id: string) => void;
+}) {
+  const customs = useLiveQuery(() => db.customExercises.toArray(), []) ?? [];
+  const [name, setName] = useState('');
+  const [kind, setKind] = useState<CustomKind>('weight');
+  const [err, setErr] = useState<string | null>(null);
+
+  async function createCustom() {
+    const n = name.trim();
+    if (!n) return;
+    const existing = customs.find((c) => c.name.toLowerCase() === n.toLowerCase());
+    if (existing) {
+      onPick(existing.id);
+      return;
+    }
+    const slug = n
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!slug) {
+      setErr('Skriv ett namn med bokstäver eller siffror.');
+      return;
+    }
+    if (/hip.?thrust/.test(slug)) {
+      setErr('Hip thrust är bortvald – prova pull-through i kabel 🍑');
+      return;
+    }
+    const ex = { ...customExercise(`custom-${slug}`, n, kind), updatedAt: Date.now() };
+    await db.customExercises.put(ex);
+    registerCustomExercises([...customs, ex]);
+    setName('');
+    onPick(ex.id);
+  }
+
+  const list = [exercise(original), ...alts];
+  return (
+    <Sheet open={open} onClose={onClose} title={`Byt ut ${exercise(original).name.toLowerCase()}`}>
+      <p className="text-soft mb-2 text-sm">Historiken sparas per övning, så inget försvinner.</p>
+      <div className="space-y-2">
+        {list.map((a) => (
+          <button key={a.id} className={`card-soft block w-full text-left font-semibold ${a.id === current ? 'ring-2 ring-pink' : ''}`} onClick={() => onPick(a.id)}>
+            {a.name}
+            {a.id === original && <span className="text-soft ml-2 text-xs font-normal">enligt plan</span>}
+          </button>
+        ))}
+      </div>
+
+      {customs.length > 0 && (
+        <>
+          <h3 className="mb-2 mt-4 font-semibold">Dina egna övningar</h3>
+          <div className="space-y-2">
+            {customs
+              .sort((a, b) => a.name.localeCompare(b.name, 'sv'))
+              .map((a) => (
+                <button key={a.id} className={`card-soft block w-full text-left font-semibold ${a.id === current ? 'ring-2 ring-pink' : ''}`} onClick={() => onPick(a.id)}>
+                  ✨ {a.name}
+                  <span className="text-soft ml-2 text-xs font-normal">{a.unit === 'seconds' ? 'tid' : a.bodyweight ? 'reps' : 'vikt × reps'}</span>
+                </button>
+              ))}
+          </div>
+        </>
+      )}
+
+      <h3 className="mb-2 mt-4 font-semibold">+ Egen övning</h3>
+      <input className="field" id="custom-exercise-name" placeholder="T.ex. Smith-knäböj, Hip abduction stående…" value={name} onChange={(e) => setName(e.target.value)} aria-label="Namn på egen övning" />
+      <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Hur loggas övningen">
+        {(
+          [
+            ['weight', 'Vikt × reps'],
+            ['reps', 'Bara reps'],
+            ['seconds', 'Tid (s)'],
+          ] as const
+        ).map(([k, label]) => (
+          <button key={k} role="radio" aria-checked={kind === k} className={`btn px-2 text-sm ${kind === k ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setKind(k)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {err && (
+        <p className="mt-2 text-sm text-[#9a4a00] dark:text-[#ffc38a]" role="alert">
+          {err}
+        </p>
+      )}
+      <button className="btn btn-primary mt-3 w-full" onClick={createCustom} disabled={!name.trim()}>
+        Använd egen övning
+      </button>
+    </Sheet>
   );
 }

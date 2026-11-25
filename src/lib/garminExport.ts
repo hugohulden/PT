@@ -87,7 +87,7 @@ function strengthExercise(i: StrengthItem) {
   const reps = ex.id === 'negative-pullup' ? 3 : i.unit === 'seconds' ? i.repMax : i.repMax;
   return {
     name: ex.garmin.name ?? ex.name,
-    category: ex.garmin.category,
+    ...(ex.garmin.category ? { category: ex.garmin.category } : {}),
     sets: i.sets,
     reps,
     rest_seconds: i.restSec ?? 90,
