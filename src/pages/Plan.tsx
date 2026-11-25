@@ -6,16 +6,42 @@ import { prettyDate, weekNumber, weekStart } from '../lib/dates';
 import { isDeload, isPullupTest, plannedRunKm } from '../lib/plan/generator';
 import { pullupStep } from '../lib/plan/strength';
 import { Page } from '../components/ui';
+import { HISTORY } from '../lib/history';
 
 export default function Plan() {
   const s = useSettings();
   const d = useToday();
   const current = weekNumber(d, s.week1Start);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []) ?? [];
-  const maxKm = Math.max(1, ...Array.from({ length: s.raceWeek - s.restartWeek + 1 }, (_, i) => plannedRunKm(sessions.filter((x) => x.week === s.restartWeek + i))));
+  const maxKm = Math.max(1, ...HISTORY.map((h) => h.runKm), ...Array.from({ length: s.raceWeek - s.restartWeek + 1 }, (_, i) => plannedRunKm(sessions.filter((x) => x.week === s.restartWeek + i))));
 
   return (
     <Page title="Plan" back>
+      <section className="card">
+        <h2 className="text-lg font-bold">
+          Före appen <span className="text-soft text-sm font-semibold">V1–V5</span>
+        </h2>
+        <p className="text-soft mb-2 text-sm">Det du redan har gjort 💪</p>
+        <ol className="space-y-1">
+          {HISTORY.map((h) => (
+            <li key={h.week}>
+              <Link to={`/vecka/${h.week}`} className="flex items-center gap-2 rounded-xl px-2 py-1.5">
+                <span className="w-10 font-bold">V{h.week}</span>
+                <span className="flex-1">
+                  <span className="block text-sm">{prettyDate(h.from)}</span>
+                  <span className="mt-0.5 block h-2 rounded-full bg-surface-2">
+                    <span className="block h-2 rounded-full bg-lavender" style={{ width: `${(h.runKm / maxKm) * 100}%` }} />
+                  </span>
+                </span>
+                <span className="w-24 text-right text-sm">
+                  {h.approx ? 'ca ' : ''}
+                  {h.runKm.toLocaleString('sv-SE')} km
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
       {s.phases.map((p) => (
         <section key={p.key} className="card">
           <h2 className="text-lg font-bold">

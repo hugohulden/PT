@@ -142,6 +142,9 @@ describe('regler', () => {
     const w = generateWeek(S, 8).map((p) => (p.kind === 'gymA' ? { ...p, date: '2026-12-11' } : p));
     expect(scheduleWarnings(w).join(' ')).toMatch(/långpasset/);
   });
+  it('tom vecka (före appen) ger inga varningar', () => {
+    expect(scheduleWarnings([])).toEqual([]);
+  });
   it('standardveckan ger inga varningar', () => {
     expect(scheduleWarnings(generateWeek(S, 8))).toEqual([]);
   });

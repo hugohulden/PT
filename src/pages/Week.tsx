@@ -9,6 +9,8 @@ import { isDeload, phaseOf, plannedRunKm } from '../lib/plan/generator';
 import { scheduleWarnings } from '../lib/rules';
 import type { PlannedSession } from '../lib/types';
 import SessionDetail from '../components/SessionDetail';
+import HistoryCard from '../components/HistoryCard';
+import { historyWeek } from '../lib/history';
 import { HrBadge, KIND_EMOJI, Page, Sheet, StatusChip } from '../components/ui';
 
 export default function Week() {
@@ -59,9 +61,13 @@ export default function Week() {
           {phase ? ` · ${phase.name}` : ''}
           {isDeload(s, week) ? ' · Avlastningsvecka 💆‍♀️' : ''}
         </p>
-        <p className="mt-1">
-          {doneCount}/{total} pass klara · ≈ {plannedRunKm(sessions)} km löpning planerat
-        </p>
+        {week >= s.restartWeek ? (
+          <p className="mt-1">
+            {doneCount}/{total} pass klara · ≈ {plannedRunKm(sessions)} km löpning planerat
+          </p>
+        ) : (
+          <p className="mt-1">Före appen – planen började V{s.restartWeek}.</p>
+        )}
         {week >= s.restartWeek && (
           <Link to={`/garmin?vecka=${week}`} className="btn btn-primary mt-3 w-full">
             ⌚ Skicka veckan till Garmin
@@ -74,13 +80,15 @@ export default function Week() {
         )}
       </div>
 
+      {historyWeek(week) && <HistoryCard h={historyWeek(week)!} s={s} />}
+
       {warnings.map((w) => (
         <div key={w} className="card-soft border-l-4 border-[#9a4a00] text-sm" role="alert">
           ⚠️ {w}
         </div>
       ))}
 
-      {dates.map((date) => {
+      {week >= s.restartWeek && dates.map((date) => {
         const items = sessions.filter((x) => x.date === date);
         return (
           <section key={date} className={`card ${date === d ? 'ring-2 ring-pink' : ''}`}>

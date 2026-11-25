@@ -10,6 +10,7 @@ const HEAVY_LEGS = new Set(['gymA', 'gymFull']);
 const HARD_RUN = new Set(['quality', 'long', 'race']);
 
 export function scheduleWarnings(week: PlannedSession[]): string[] {
+  if (week.length === 0) return [];
   const warnings: string[] = [];
   const byDate = new Map<ISODate, PlannedSession[]>();
   for (const s of week) {
