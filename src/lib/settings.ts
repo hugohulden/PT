@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   raceDate: '2027-05-22',
   raceName: 'Göteborgsvarvet',
   raceWeek: 31,
-  weekdays: { gymA: 1, easy: 2, gymB: 3, quality: 4, swim: 5, long: 6, rest: 7 },
+  weekdays: { gymA: 1, easy: 2, gymB: 3, quality: 4, swim: 5, long: 7, rest: 6 },
   hr: { easy: [120, 150], long: [125, 150], quality: [154, 170], maxHr: 193 },
   zones: { z2: 125, z3: 144, z4: 166, z5: 187 },
   easyPaceSec: 470, // 7:50/km – kalibreras mot hennes data

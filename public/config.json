@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "message": "",
+  "version": 2,
+  "message": "Nu ligger långpasset på söndagar och lördag är vilodag 🌸",
   "settings": {
     "name": "Nellie",
     "week1Start": "2026-10-19",
@@ -12,8 +12,8 @@
       "gymB": 3,
       "quality": 4,
       "swim": 5,
-      "long": 6,
-      "rest": 7
+      "long": 7,
+      "rest": 6
     },
     "hr": {
       "easy": [

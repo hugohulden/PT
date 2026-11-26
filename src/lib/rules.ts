@@ -9,7 +9,10 @@ import { easyRun } from './plan/running';
 const HEAVY_LEGS = new Set(['gymA', 'gymFull']);
 const HARD_RUN = new Set(['quality', 'long', 'race']);
 
-export function scheduleWarnings(week: PlannedSession[]): string[] {
+const DAY_NAMES = ['', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag', 'söndag'];
+
+/** restDay = föredragen vilodag (ISO-veckodag), från inställningarna. */
+export function scheduleWarnings(week: PlannedSession[], restDay = 6): string[] {
   if (week.length === 0) return [];
   const warnings: string[] = [];
   const byDate = new Map<ISODate, PlannedSession[]>();
@@ -33,8 +36,9 @@ export function scheduleWarnings(week: PlannedSession[]): string[] {
   const dates = new Set(week.map((s) => s.date));
   const weekDates = week.length ? weekDatesFrom(week) : [];
   const restDays = weekDates.filter((d) => !dates.has(d) || on(d).every((x) => x.kind === 'rest'));
-  if (restDays.length === 0) warnings.push('Ingen vilodag den här veckan – minst en behövs, helst söndag.');
-  else if (!restDays.some((d) => isoWeekday(d) === 7)) warnings.push('Söndagen är inte längre vilodag. Okej ibland, men försök hålla den fri 💖');
+  const name = DAY_NAMES[restDay];
+  if (restDays.length === 0) warnings.push(`Ingen vilodag den här veckan – minst en behövs, helst ${name}.`);
+  else if (!restDays.some((d) => isoWeekday(d) === restDay)) warnings.push(`${name[0].toUpperCase() + name.slice(1)}en är inte längre vilodag. Okej ibland, men försök hålla den fri 💖`);
   return [...new Set(warnings)];
 }
 

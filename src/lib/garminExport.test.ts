@@ -11,15 +11,15 @@ const blocks = (text: string) => [...text.matchAll(/```json\n([\s\S]*?)\n```/g)]
 describe('Garmin-fil', () => {
   const plan = generatePlan(S);
 
-  it('V6: gym A torsdag och långpass lördag med pulstak 150, ingen simning', () => {
+  it('V6: gym A torsdag och långpass söndag med pulstak 150, ingen simning', () => {
     const f = weekFile(plan, [6], S);
     expect(f.filename).toBe('garmin-vecka-06.md');
     const specs = blocks(f.text);
-    expect(specs.map((x) => x.date)).toEqual(['2026-11-26', '2026-11-28']);
+    expect(specs.map((x) => x.date)).toEqual(['2026-11-26', '2026-11-29']);
     const long = specs.find((x) => x.type === 'running');
     expect(long.tool).toBe('create_run_workout');
     expect(long.args.hr_max).toBe(150);
-    expect(long.name).toBe('RK V06 Lör – Långpass 10–12 km');
+    expect(long.name).toBe('RK V06 Sön – Långpass 10–12 km');
     expect(f.text).toMatch(/Kontrollera först/);
     expect(f.text).not.toMatch(/swim/i);
   });
@@ -43,11 +43,11 @@ describe('Garmin-fil', () => {
   it('uppdateringsfil: flyttat pass ersätts, överhoppat tas bort', () => {
     const long = plan.find((x) => x.id === 'w07-long')!;
     const easy = plan.find((x) => x.id === 'w07-easy')!;
-    const moved = { ...long, date: '2026-12-06', garminName: 'RK V07 Sön – Långpass 12 km', garminExported: { name: long.garminName!, date: long.date, at: 1 } };
+    const moved = { ...long, date: '2026-12-05', garminName: 'RK V07 Lör – Långpass 12 km', garminExported: { name: long.garminName!, date: long.date, at: 1 } };
     const skipped = { ...easy, status: 'skipped' as const, garminExported: { name: easy.garminName!, date: easy.date, at: 1 } };
     const ops = blocks(updateFile([moved, skipped], 7).text)[0];
-    expect(ops[0]).toMatchObject({ åtgärd: 'ersätt', gammalt_namn: 'RK V07 Lör – Långpass 12 km', gammalt_datum: '2026-12-05' });
-    expect(ops[0].nytt_pass.date).toBe('2026-12-06');
+    expect(ops[0]).toMatchObject({ åtgärd: 'ersätt', gammalt_namn: 'RK V07 Sön – Långpass 12 km', gammalt_datum: '2026-12-06' });
+    expect(ops[0].nytt_pass.date).toBe('2026-12-05');
     expect(ops[1]).toMatchObject({ åtgärd: 'ta_bort', gammalt_namn: easy.garminName });
   });
 });

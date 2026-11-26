@@ -47,13 +47,17 @@ describe('plangenerator', () => {
 
   it('V6 innehåller bara tors–sön', () => {
     const v6 = plan.filter((p) => p.week === 6);
-    expect(v6.map((p) => p.date)).toEqual(['2026-11-26', '2026-11-27', '2026-11-28', '2026-11-29']);
+    expect(v6.map((p) => p.date).sort()).toEqual(['2026-11-26', '2026-11-27', '2026-11-28', '2026-11-29']);
     const long = v6.find((p) => p.kind === 'long')!;
     expect(long.run!.hr[1]).toBe(150);
   });
 
-  it('söndagar är vila hela vägen', () => {
-    for (const p of plan) if (isoWeekday(p.date) === 7) expect(p.kind).toBe('rest');
+  it('lördagar är vila och långpasset ligger på söndag (utom loppveckan)', () => {
+    for (const p of plan) {
+      if (p.week === 31) continue;
+      if (isoWeekday(p.date) === 6) expect(p.kind).toBe('rest');
+      if (p.kind === 'long') expect(isoWeekday(p.date)).toBe(7);
+    }
   });
 
   it('alla pass-id är unika', () => {
@@ -139,7 +143,7 @@ describe('Garmin-nycklar', () => {
 
 describe('regler', () => {
   it('varnar för tungt benpass dagen före långpasset', () => {
-    const w = generateWeek(S, 8).map((p) => (p.kind === 'gymA' ? { ...p, date: '2026-12-11' } : p));
+    const w = generateWeek(S, 8).map((p) => (p.kind === 'gymA' ? { ...p, date: '2026-12-12' } : p));
     expect(scheduleWarnings(w).join(' ')).toMatch(/långpasset/);
   });
   it('tom vecka (före appen) ger inga varningar', () => {

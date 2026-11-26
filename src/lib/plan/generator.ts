@@ -176,7 +176,9 @@ export function mergePlan(generated: PlannedSession[], existing: PlannedSession[
     if (!e) return g;
     byId.delete(g.id);
     if (e.userModified || e.status !== 'planned' || e.adjustment) return e;
-    return { ...g, garminDirty: e.garminDirty, updatedAt: e.updatedAt };
+    // Skickat till Garmin och nu på annan dag/med annat innehåll → behöver uppdateringsfil
+    const changed = !!e.garminExported && (e.garminExported.date !== g.date || e.garminExported.name !== g.garminName || JSON.stringify(e.run) !== JSON.stringify(g.run));
+    return { ...g, garminExported: e.garminExported, garminDirty: e.garminDirty || changed, updatedAt: e.updatedAt };
   });
   // Egna pass (t.ex. tillagt extrapass) som inte finns i generatorn
   for (const e of byId.values()) if (e.userModified) out.push(e);

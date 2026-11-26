@@ -25,7 +25,7 @@ export default function Week() {
   const [sel, setSel] = useState<PlannedSession | null>(null);
   const [moving, setMoving] = useState<PlannedSession | null>(null);
   const phase = phaseOf(s, week);
-  const warnings = scheduleWarnings(sessions);
+  const warnings = scheduleWarnings(sessions, s.weekdays.rest);
   const doneCount = sessions.filter((x) => x.status === 'done').length;
   const total = sessions.filter((x) => x.kind !== 'rest').length;
   const dirty = sessions.some((x) => x.garminDirty && x.garminExported);
@@ -199,6 +199,7 @@ export default function Week() {
             session={moving}
             dates={dates}
             all={sessions}
+            restDay={s.weekdays.rest}
             onPick={async (date) => {
               await moveSession(moving.id, date);
               setMoving(null);
@@ -210,12 +211,12 @@ export default function Week() {
   );
 }
 
-function MovePicker({ session, dates, all, onPick }: { session: PlannedSession; dates: string[]; all: PlannedSession[]; onPick: (d: string) => void }) {
+function MovePicker({ session, dates, all, onPick, restDay }: { session: PlannedSession; dates: string[]; all: PlannedSession[]; onPick: (d: string) => void; restDay: number }) {
   return (
     <div className="space-y-2">
       {dates.map((date) => {
         const preview = all.map((x) => (x.id === session.id ? { ...x, date } : x));
-        const w = scheduleWarnings(preview);
+        const w = scheduleWarnings(preview, restDay);
         const on = all.filter((x) => x.date === date && x.id !== session.id);
         return (
           <button key={date} className={`card-soft block w-full text-left ${date === session.date ? 'ring-2 ring-pink' : ''}`} onClick={() => onPick(date)}>
