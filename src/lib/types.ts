@@ -63,6 +63,10 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   customQuotes: string[];
   soundOn: boolean;
+  /** Kaloriräknaren: underhåll (Garmin 28-dagars snitt), underskott och makrofördelning i procent */
+  maintenanceKcal: number;
+  deficitKcal: number;
+  macroPct: { p: number; c: number; f: number };
   updatedAt: number;
 }
 

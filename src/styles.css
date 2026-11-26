@@ -31,6 +31,21 @@
   --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --radius-card: 22px;
+
+  /* Färgnamn som kaloriräknaren (från hugohulden/traningsapp) använder – pekar på Nellies palett */
+  --color-bg: var(--bg);
+  --color-panel: var(--surface);
+  --color-panel2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-mute: var(--ink-soft);
+  --color-accent: var(--accent);
+  --color-onaccent: var(--on-accent);
+  --color-run: var(--run);
+  --color-swim: var(--swim);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-good: var(--good);
 }
 
 :root {
@@ -45,6 +60,12 @@
   --shadow: 0 8px 24px -12px rgb(90 31 75 / 0.25);
   --grad: linear-gradient(135deg, #ff3d8b 0%, #f7a8c4 50%, #cdb4f5 100%);
   --on-grad: #3a0f30;
+  --on-accent: #ffffff;
+  --run: #6b3fc4;
+  --swim: #8a63d2;
+  --warn: #9a4a00;
+  --bad: #b3261e;
+  --good: #1b7a4b;
   color-scheme: light;
 }
 
@@ -60,6 +81,12 @@
   --shadow: 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --grad: linear-gradient(135deg, #c2185b 0%, #8e3a8a 55%, #6a4bb0 100%);
   --on-grad: #ffffff;
+  --on-accent: #1f0a1b;
+  --run: #cdb4f5;
+  --swim: #b79cf0;
+  --warn: #ffb26b;
+  --bad: #ff8a80;
+  --good: #7ee2a8;
   color-scheme: dark;
 }
 
@@ -87,14 +114,17 @@ h3,
   font-family: var(--font-display);
 }
 
-/* iOS zoomar in på inputs under 16 px */
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  font-size: max(16px, 1em);
-  color: inherit;
+/* iOS zoomar in på inputs under 16 px. Ligger i base-lagret så att Tailwind-klasser
+   (t.ex. text-bg, text-3xl i kaloriräknaren) går före. */
+@layer base {
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    font-size: max(16px, 1em);
+    color: inherit;
+  }
 }
 
 .card {
@@ -227,4 +257,33 @@ button {
 }
 .timer-done {
   animation: pulse-ring 1s ease-in-out 3;
+}
+
+/* Från kaloriräknaren */
+.text-grad {
+  background: linear-gradient(100deg, var(--accent), var(--swim));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ring-grad {
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 70%, transparent), color-mix(in srgb, var(--swim) 70%, transparent)) border-box;
+  border: 1px solid transparent;
+}
+.glow-accent {
+  box-shadow: 0 6px 24px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.glow-run {
+  box-shadow: 0 6px 24px -8px color-mix(in srgb, var(--run) 60%, transparent);
+}
+/* Datumfält sticker annars ut på iPhone */
+input[type='date'],
+input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
 }

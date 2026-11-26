@@ -27,6 +27,9 @@ export const REMOTE_KEYS = [
   'readiness',
   'restSeconds',
   'steps',
+  'maintenanceKcal',
+  'deficitKcal',
+  'macroPct',
 ] as const satisfies readonly (keyof Settings)[];
 
 export const KEY_LABEL: Record<(typeof REMOTE_KEYS)[number], string> = {
@@ -43,6 +46,9 @@ export const KEY_LABEL: Record<(typeof REMOTE_KEYS)[number], string> = {
   readiness: 'dagsformsregler',
   restSeconds: 'vilotid',
   steps: 'stegmål',
+  maintenanceKcal: 'underhållskalorier',
+  deficitKcal: 'kaloriunderskott',
+  macroPct: 'makrofördelning',
 };
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);

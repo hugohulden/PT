@@ -16,6 +16,92 @@ import type {
   WorkoutLog,
 } from '../lib/types';
 
+// ---------------------------------------------------------------------------
+// Kaloriräknaren (från hugohulden/traningsapp)
+
+export type Meal = 'frukost' | 'lunch' | 'middag' | 'mellanmal';
+
+/** Näringsvärden. För livsmedel: per 100 g. För en loggrad: totalt. */
+export interface Nutrients {
+  kcal: number;
+  p?: number;
+  c?: number;
+  f?: number;
+}
+
+/** Hur mycket som åts: gram, eller portioner (då med portionens vikt om den är känd). */
+export interface Amount {
+  unit: 'g' | 'portion';
+  value: number;
+}
+
+/**
+ * Ett livsmedel som använts eller sparats: egen produkt, cachad Open Food Facts-produkt
+ * eller ett livsmedel från Livsmedelsverket som hon har ätit (för "Senast ätna" och favoriter).
+ */
+export interface FoodRec {
+  id: string; // "lv:123", "off:<streckkod>", "egen:<uid>"
+  source: 'lv' | 'off' | 'egen';
+  name: string;
+  brand?: string;
+  barcode?: string;
+  per100: Nutrients;
+  /** Gram per portion, om känd. */
+  servingG?: number;
+  servingLabel?: string;
+  /** Vad en portion heter: "st", "skiva", "glas" … (standard "portion"). */
+  unitLabel?: string;
+  favorite?: boolean;
+  lastAmount?: Amount;
+  lastUsedAt?: number;
+  /** Sparad som egen produkt (inte bara cache). */
+  saved?: boolean;
+  updatedAt: number;
+}
+
+export interface RecipeIngredient {
+  foodId?: string;
+  name: string;
+  grams: number;
+  per100: Nutrients;
+}
+
+export interface RecipeRec {
+  id: string;
+  name: string;
+  ingredients: RecipeIngredient[];
+  /** Antal portioner rätten räcker till. */
+  portions: number;
+  /** Färdig vikt i gram (valfritt) – gör att hon kan logga i gram. */
+  totalWeightG?: number;
+  favorite?: boolean;
+  lastAmount?: Amount;
+  lastUsedAt?: number;
+  updatedAt: number;
+}
+
+export interface FoodLogRec {
+  id: string;
+  date: string;
+  meal: Meal;
+  name: string;
+  /** Totalt för det som loggades. */
+  n: Nutrients;
+  amount?: Amount;
+  /** Gram per portion när amount är portioner. */
+  servingG?: number;
+  /** Vad en portion heter ("st", "skiva" …). */
+  unitLabel?: string;
+  ref: { kind: 'food' | 'recipe' | 'quick'; id?: string };
+  createdAt: number;
+}
+
+/** Dagens förbrukning från Garmin (valfri). */
+export interface FoodDayRec {
+  date: string;
+  burnedKcal: number;
+}
+
 export interface OutboxItem {
   id?: number;
   table: SyncedTable;
@@ -42,6 +128,10 @@ export const SYNCED_TABLES = [
   'imports',
   'customExercises',
   'illness',
+  'foodLog',
+  'foods',
+  'recipes',
+  'foodDays',
 ] as const;
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
@@ -59,6 +149,10 @@ export class TrainingDB extends Dexie {
   imports!: Table<ImportRecord, string>;
   customExercises!: Table<Exercise, string>;
   illness!: Table<Illness, string>;
+  foodLog!: Table<FoodLogRec, string>;
+  foods!: Table<FoodRec, string>;
+  recipes!: Table<RecipeRec, string>;
+  foodDays!: Table<FoodDayRec, string>;
   /** Bilder sparas bara lokalt och synkas aldrig. */
   photos!: Table<PhotoRecord, string>;
   outbox!: Table<OutboxItem, number>;
@@ -84,6 +178,7 @@ export class TrainingDB extends Dexie {
     });
     this.version(2).stores({ customExercises: 'id' });
     this.version(3).stores({ illness: 'id, from' });
+    this.version(4).stores({ foodLog: 'id, date, createdAt', foods: 'id, barcode, lastUsedAt', recipes: 'id, lastUsedAt', foodDays: 'date' });
 
     // Varje lokal ändring i en synkad tabell läggs i utkorgen.
     for (const t of SYNCED_TABLES) {

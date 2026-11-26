@@ -59,6 +59,13 @@
     "steps": {
       "goal": 10000,
       "bonus": 12500
+    },
+    "maintenanceKcal": 1995,
+    "deficitKcal": 400,
+    "macroPct": {
+      "p": 30,
+      "c": 40,
+      "f": 30
     }
   }
 }

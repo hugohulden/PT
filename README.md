@@ -61,6 +61,15 @@ Utan detta sparas allt bara i telefonen (och i JSON-backupen under Inställninga
 
 ---
 
+## Mat (kaloriräknare)
+
+Fliken **Mat** kommer från [hugohulden/traningsapp](https://github.com/hugohulden/traningsapp) (`src/food/`, `src/pages/Food.tsx`), anpassad för **viktnedgång** och utan matlådor:
+
+- Mål = (dagens förbrukning från Garmin om ifylld, annars underhåll) **−** underskott. Förval: 1 995 − 400 = **1 595 kcal**, makron 30/40/30.
+- Sök i Livsmedelsverkets databas (2 606 livsmedel, offline), Open Food Facts (kräver nät), streckkodsskanning, snabbval, snabbkalorier, rätter med portioner, kopiera måltid/dag, senaste 7 dagarna (grönt = på eller under målet).
+- Ändra värden under **Mer → Inställningar → Mat**, eller åt henne via `config.json` (`maintenanceKcal`, `deficitKcal`, `macroPct`).
+- Livsmedelsdata: Livsmedelsverket (CC BY 4.0). Uppdatera med `scripts/build_livsmedel.py`.
+
 ## Ändra något i Nellies plan (för Hugo)
 
 Inställningar som pulstak, loppdatum, veckodagar, stegmål och dagsformsregler styrs från **`public/config.json`**. Ändra direkt på GitHub (pennan ✏️ på filen) och spara:
@@ -82,6 +91,7 @@ Efter ett par minuter (deploy) får hon ändringen nästa gång hon öppnar appe
 | `readiness` | Dagsform: `minSleepH`, `rhrAbsolute`, `rhrAboveAvg`, `rhrMode` (`absolute`/`relative`/`either`) |
 | `easyPaceSec`, `racePaceSec` | Fart i sekunder/km (för Garmin-tider och tempopass) |
 | `steps`, `restSeconds`, `name` | Stegmål/guldnivå, vilotid på gymmet, namn |
+| `maintenanceKcal`, `deficitKcal`, `macroPct` | Kaloriräknaren: underhåll, underskott, makrofördelning i % |
 
 ## Arkitektur
 

@@ -87,6 +87,36 @@ export default function SettingsPage() {
         </Field>
       </Section>
 
+      <Section title="Mat 🥗">
+        <Field label="Underhåll (kcal/dag)">
+          <NumberInput v={s.maintenanceKcal} step={50} onSave={(v) => save({ maintenanceKcal: Math.round(v) })} />
+        </Field>
+        <Field label="Underskott (kcal/dag)">
+          <NumberInput v={s.deficitKcal} step={50} onSave={(v) => save({ deficitKcal: Math.round(v) })} />
+        </Field>
+        <p className="card-soft mb-3 text-sm">
+          Dagligt mål: <b>{s.maintenanceKcal - s.deficitKcal} kcal</b> ({s.maintenanceKcal} − {s.deficitKcal}). Fyller du i dagens förbrukning från Garmin under Mat blir målet förbrukningen − {s.deficitKcal}.
+        </p>
+        <span className="mb-1 block text-sm font-semibold">Makrofördelning (%)</span>
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              ['p', 'Protein'],
+              ['c', 'Kolhydrater'],
+              ['f', 'Fett'],
+            ] as const
+          ).map(([k, label]) => (
+            <label key={k} className="block">
+              <span className="text-soft text-xs">{label}</span>
+              <NumberInput v={s.macroPct[k]} step={5} onSave={(v) => save({ macroPct: { ...s.macroPct, [k]: Math.round(v) } })} />
+            </label>
+          ))}
+        </div>
+        {s.macroPct.p + s.macroPct.c + s.macroPct.f !== 100 && (
+          <p className="mt-2 text-sm text-[#9a4a00] dark:text-[#ffc38a]">Summan är {s.macroPct.p + s.macroPct.c + s.macroPct.f} % – den bör bli 100 %.</p>
+        )}
+      </Section>
+
       <Section title="Egna peppcitat">
         <QuoteEditor quotes={s.customQuotes} onSave={(q) => save({ customQuotes: q })} />
       </Section>

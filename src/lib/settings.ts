@@ -1,4 +1,5 @@
 import type { Settings } from './types';
+import { FOOD } from '../food/config';
 
 export const DEFAULT_SETTINGS: Settings = {
   id: 'main',
@@ -36,5 +37,8 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   customQuotes: [],
   soundOn: true,
+  maintenanceKcal: FOOD.maintenanceKcal,
+  deficitKcal: FOOD.deficitKcal,
+  macroPct: FOOD.macroPct,
   updatedAt: 0,
 };

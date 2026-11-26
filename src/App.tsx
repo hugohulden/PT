@@ -29,11 +29,17 @@ import { pauseSessionsWhileSick } from './lib/illness';
 import { celebrate } from './lib/fx';
 import { Toast } from './components/ui';
 import InstallGuide from './components/InstallGuide';
+import { FoodScreen } from './pages/Food';
+import { RecipeEditor, RecipesScreen } from './food/ui/Recipes';
+import { ToastHost } from './ui/toast';
+import { ConfirmHost } from './ui/confirm';
+import { useParams } from 'react-router-dom';
 import { APP_VERSION, NewsSheet } from './components/UpdateCheck';
 import { checkRemoteConfig, onAppVersion } from './lib/remoteConfig';
 
 const TABS = [
   { to: '/', label: 'Idag', icon: '🌸', end: true },
+  { to: '/mat', label: 'Mat', icon: '🥗' },
   { to: '/vecka', label: 'Vecka', icon: '📅' },
   { to: '/logga', label: 'Logga', icon: '💪' },
   { to: '/framsteg', label: 'Framsteg', icon: '📈' },
@@ -109,6 +115,9 @@ export default function App() {
         <Route path="/logga" element={<Log />} />
         <Route path="/logga/:id" element={<Workout />} />
         <Route path="/framsteg" element={<Progress />} />
+        <Route path="/mat" element={<FoodScreen />} />
+        <Route path="/mat/ratter" element={<RecipesScreen />} />
+        <Route path="/mat/ratt/:id" element={<RecipeRoute />} />
         <Route path="/mer" element={<More />} />
         <Route path="/plan" element={<Plan />} />
         <Route path="/installningar" element={<SettingsPage />} />
@@ -122,6 +131,8 @@ export default function App() {
         <Route path="*" element={<Placeholder />} />
       </Routes>
       {import.meta.env.VITE_PREVIEW !== '1' && <InstallGuide />}
+      <ToastHost />
+      <ConfirmHost />
       <Toast msg={badgeToast} onDone={() => setBadgeToast(null)} />
       <NewsSheet news={news} onClose={() => setNews(null)} />
       <nav
@@ -136,7 +147,7 @@ export default function App() {
               to={t.to}
               end={t.end}
               className={({ isActive }) =>
-                `relative flex min-h-[56px] flex-1 flex-col items-center justify-center text-xs font-semibold ${isActive ? 'text-accent' : 'text-soft'}`
+                `relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center text-[11px] font-semibold ${isActive ? 'text-accent' : 'text-soft'}`
               }
             >
               {({ isActive }) => (
@@ -154,4 +165,10 @@ export default function App() {
       </nav>
     </>
   );
+}
+
+function RecipeRoute() {
+  const { id } = useParams();
+  // key gör att editorn börjar om när man går mellan olika rätter
+  return <RecipeEditor key={id} id={id === 'ny' ? undefined : id} />;
 }

@@ -79,3 +79,10 @@ export function fmtDuration(sec: number): string {
 export function fmtPace(secPerKm: number): string {
   return `${Math.floor(secPerKm / 60)}:${pad2(Math.round(secPerKm % 60))}/km`;
 }
+
+// Hjälpfunktioner med samma namn som i hugohulden/traningsapp (används av kaloriräknaren)
+export const DAY_SHORT = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
+/** 0 = måndag … 6 = söndag */
+export const weekday = (d: ISODate) => isoWeekday(d) - 1;
+export const formatShort = (d: ISODate) => prettyDate(d);
+export const formatLong = (d: ISODate) => `${dayName(d)} ${prettyDate(d)}`;

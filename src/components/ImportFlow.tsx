@@ -58,7 +58,7 @@ export default function ImportFlow({ source, placeholder, onDone }: { source: 'c
   const pv = pre?.preview;
   return (
     <div>
-      <textarea className="field min-h-32 font-mono text-sm" value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label="Klistra in data" />
+      <textarea className="field min-h-32 font-mono text-base" value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label="Klistra in data" />
       <div className="mt-2 grid grid-cols-2 gap-2">
         <button className="btn btn-primary" onClick={() => analyze(text)} disabled={!text.trim()}>
           Granska
