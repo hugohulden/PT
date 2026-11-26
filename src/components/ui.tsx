@@ -57,6 +57,7 @@ export const STATUS_LABEL: Record<PlannedSession['status'], string> = {
 };
 
 export function StatusChip({ s, past }: { s: PlannedSession; past?: boolean }) {
+  if (s.status === 'skipped' && s.adjustment?.rule === 'sick') return <span className="chip">Sjuk 🤒</span>;
   const status = s.status === 'planned' && past && s.kind !== 'rest' ? 'missed' : s.status;
   const cls =
     status === 'done'

@@ -10,6 +10,8 @@ import { quoteOfDay } from '../lib/quotes';
 import { applyReadiness, readinessCheck } from '../lib/rules';
 import type { PlannedSession } from '../lib/types';
 import StepRing from '../components/StepRing';
+import SickCard from '../components/SickCard';
+import { isSickDay } from '../lib/illness';
 import SessionDetail from '../components/SessionDetail';
 import { HrBadge, KIND_EMOJI, Page, Sheet, StatusChip, Toast } from '../components/ui';
 
@@ -20,13 +22,15 @@ function greeting() {
   return 'God kväll';
 }
 
-export function stepStreak(days: { date: string; steps?: number }[], goal: number, todayD: string) {
+/** Stegsviten. Sjukdagar räknas varken med eller bryter sviten. */
+export function stepStreak(days: { date: string; steps?: number }[], goal: number, todayD: string, sick: (d: string) => boolean = () => false) {
   const map = new Map(days.map((d) => [d.date, d.steps ?? 0]));
   let streak = 0;
   // Dagens dag räknas om målet redan är nått, annars börjar vi från igår
   let d = (map.get(todayD) ?? 0) >= goal ? todayD : addDays(todayD, -1);
-  while ((map.get(d) ?? 0) >= goal) {
-    streak++;
+  for (let guard = 0; guard < 400; guard++) {
+    if ((map.get(d) ?? 0) >= goal) streak++;
+    else if (!sick(d)) break;
     d = addDays(d, -1);
   }
   return streak;
@@ -53,7 +57,9 @@ export default function Today() {
   const main = sessions.find((x) => x.kind !== 'rest') ?? sessions[0];
   const daysLeft = diffDays(s.raceDate, d);
   const steps = todayH?.steps ?? 0;
-  const streak = stepStreak(stepDays, s.steps.goal, d);
+  const illnesses = useLiveQuery(() => db.illness.filter((i) => !i.deleted).toArray(), []) ?? [];
+  const sickNow = illnesses.some((i) => !i.to);
+  const streak = stepStreak(stepDays, s.steps.goal, d, (x) => isSickDay(x, illnesses, d));
 
   async function start(x: PlannedSession) {
     if (x.type === 'strength') {
@@ -97,6 +103,8 @@ export default function Today() {
         )}
       </header>
 
+      {sickNow && <SickCard onToast={setToast} />}
+
       {/* Dagsform */}
       <section className="card" aria-labelledby="dagsform">
         <h2 id="dagsform" className="mb-2 text-lg font-semibold">
@@ -111,7 +119,7 @@ export default function Today() {
         ) : (
           <p className="text-soft">Ingen morgondata än. Den kommer med nästa Garmin-synk ☁️</p>
         )}
-        {suggestions.length > 0 && main && !main.adjustment && main.status === 'planned' && (
+        {!sickNow && suggestions.length > 0 && main && !main.adjustment && main.status === 'planned' && (
           <div className="mt-3 space-y-2">
             {suggestions.map((sg, i) => (
               <div key={sg.rule} className="card-soft">
@@ -124,7 +132,7 @@ export default function Today() {
             ))}
           </div>
         )}
-        {suggestions.length === 0 && todayH && <p className="mt-2 text-sm">Allt ser bra ut – kör enligt plan ✨</p>}
+        {!sickNow && suggestions.length === 0 && todayH && <p className="mt-2 text-sm">Allt ser bra ut – kör enligt plan ✨</p>}
       </section>
 
       {/* Dagens pass */}
@@ -147,16 +155,17 @@ export default function Today() {
               <span className="font-semibold">Håll pulsen under {x.run.hr[1]}!</span>
             </div>
           )}
-          {x.adjustment && (
+          {x.adjustment?.rule === 'sick' && x.status === 'skipped' && <p className="card-soft mt-3 text-sm">🤒 Pausat medan du är sjuk. Vila är det bästa du kan göra nu.</p>}
+          {x.adjustment && !(x.adjustment.rule === 'sick' && x.status === 'skipped') && (
             <p className="card-soft mt-3 text-sm">
-              ✨ Justerat efter dagsformen.{' '}
+              ✨ {x.adjustment.rule === 'sick' ? 'Lättare pass efter sjukdomen.' : 'Justerat efter dagsformen.'}{' '}
               <button className="text-accent font-semibold underline" onClick={() => undo(x)}>
                 Ångra
               </button>
             </p>
           )}
           <div className="mt-4 flex gap-2">
-            {x.kind !== 'rest' && x.status !== 'done' && (
+            {x.kind !== 'rest' && x.status !== 'done' && x.status !== 'skipped' && (
               <button className="btn btn-primary flex-1 text-lg" onClick={() => start(x)}>
                 {x.type === 'strength' ? (x.workoutLogId ? 'Fortsätt passet' : 'Starta') : 'Visa passet'}
               </button>
@@ -195,6 +204,8 @@ export default function Today() {
           + Väg in
         </button>
       </section>
+
+      {!sickNow && <SickCard onToast={setToast} />}
 
       <p className="font-display px-2 py-2 text-center text-lg font-semibold">“{quoteOfDay(d, s.customQuotes)}”</p>
 

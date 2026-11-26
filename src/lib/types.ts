@@ -124,7 +124,7 @@ export type SessionStatus = 'planned' | 'done' | 'missed' | 'moved' | 'skipped';
 
 export interface Adjustment {
   reason: string;
-  rule: 'sleep' | 'rhr' | 'hrv' | 'manual';
+  rule: 'sleep' | 'rhr' | 'hrv' | 'manual' | 'sick';
   appliedAt: number;
   original: Pick<PlannedSession, 'title' | 'kind' | 'run' | 'strength'>;
 }
@@ -303,4 +303,15 @@ export interface PhotoRecord {
   id: string;
   date: ISODate;
   blob: Blob;
+}
+
+export interface Illness {
+  id: string;
+  from: ISODate;
+  /** Sista sjukdagen. Saknas = sjuk just nu. */
+  to?: ISODate;
+  /** mild = förkyld utan feber (över halsen), fever = feber eller symtom under halsen */
+  level: 'mild' | 'fever';
+  updatedAt: number;
+  deleted?: boolean;
 }

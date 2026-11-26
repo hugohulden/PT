@@ -2,6 +2,7 @@ import { db } from '../db/db';
 import { getSettings } from '../db/repo';
 import { addDays, mondayOf, today, weekDates, weekNumber, type ISODate } from './dates';
 import type { Badge } from './types';
+import { isSickDay } from './illness';
 
 export interface BadgeDef {
   id: string;
@@ -53,9 +54,15 @@ export async function evaluateBadges(): Promise<BadgeDef[]> {
 
   // Steg
   const health = (await db.health.toArray()).sort((a, b) => a.date.localeCompare(b.date));
+  // Sjukdagar bryter inte sviten
+  const ill = (await db.illness.toArray()).filter((i) => !i.deleted);
   let streak = 0;
   let prev: string | undefined;
   for (const h of health) {
+    if (isSickDay(h.date, ill) && (h.steps ?? 0) < s.steps.goal) {
+      if (prev) prev = h.date;
+      continue;
+    }
     const ok = (h.steps ?? 0) >= s.steps.goal;
     streak = ok ? (prev && addDays(prev, 1) === h.date ? streak + 1 : 1) : 0;
     prev = ok ? h.date : undefined;

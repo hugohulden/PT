@@ -3,6 +3,7 @@ import type {
   Activity,
   Badge,
   Exercise,
+  Illness,
   DailyHealth,
   ImportRecord,
   Measurement,
@@ -40,6 +41,7 @@ export const SYNCED_TABLES = [
   'prs',
   'imports',
   'customExercises',
+  'illness',
 ] as const;
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
@@ -56,6 +58,7 @@ export class TrainingDB extends Dexie {
   prs!: Table<PR, string>;
   imports!: Table<ImportRecord, string>;
   customExercises!: Table<Exercise, string>;
+  illness!: Table<Illness, string>;
   /** Bilder sparas bara lokalt och synkas aldrig. */
   photos!: Table<PhotoRecord, string>;
   outbox!: Table<OutboxItem, number>;
@@ -80,6 +83,7 @@ export class TrainingDB extends Dexie {
       meta: 'key',
     });
     this.version(2).stores({ customExercises: 'id' });
+    this.version(3).stores({ illness: 'id, from' });
 
     // Varje lokal ändring i en synkad tabell läggs i utkorgen.
     for (const t of SYNCED_TABLES) {

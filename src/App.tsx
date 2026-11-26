@@ -25,6 +25,7 @@ import { startIntervalsAutoSync } from './sync/intervals';
 import { registerCustomExercises } from './lib/exercises';
 import { evaluateBadges } from './lib/badges';
 import { matchActivities } from './lib/importer';
+import { pauseSessionsWhileSick } from './lib/illness';
 import { celebrate } from './lib/fx';
 import { Toast } from './components/ui';
 import InstallGuide from './components/InstallGuide';
@@ -73,6 +74,7 @@ export default function App() {
       .then(() => onAppVersion(APP_VERSION))
       .then(() => remote())
       .then(() => matchActivities())
+      .then(() => pauseSessionsWhileSick())
       .then(() => {
         setReady(true);
         startAutoSync();
