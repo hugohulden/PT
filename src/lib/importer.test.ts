@@ -57,6 +57,15 @@ describe('import', () => {
     expect(pre.workouts.duplicate).toBe(1);
   });
 
+  it('en borttagen vikt kommer inte tillbaka vid nästa import/synk', async () => {
+    const p = normalizePayload({ weigh_ins: [{ date: '2026-11-12', kg: 73.5 }] });
+    await applyImport(p, { hash: 'a', source: 'claude', label: '' });
+    const w = (await db.weighIns.toArray())[0];
+    await db.weighIns.update(w.id, { deleted: true });
+    await applyImport(p, { hash: 'b', source: 'garmin', label: '' });
+    expect((await db.weighIns.toArray()).filter((x) => !x.deleted)).toHaveLength(0);
+  });
+
   it('hälsodata skriver inte över befintliga värden med tomma', async () => {
     await applyImport(normalizePayload({ daily: [{ date: '2026-12-01', steps: 12000, resting_hr: 49 }] }), { hash: 'x', source: 'garmin', label: '' });
     await applyImport(normalizePayload({ daily: [{ date: '2026-12-01', sleep_h: 8 }] }), { hash: 'y', source: 'garmin', label: '' });

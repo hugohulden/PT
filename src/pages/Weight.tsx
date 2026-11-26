@@ -44,12 +44,20 @@ export default function Weight() {
             <summary className="text-accent min-h-11 cursor-pointer py-2 font-semibold">Alla invägningar</summary>
             <ul className="space-y-1">
               {[...weigh].sort((a, b) => b.date.localeCompare(a.date)).map((w) => (
-                <li key={w.id} className="flex items-center justify-between">
+                <li key={w.id} className="flex min-h-12 items-center justify-between gap-2">
                   <span>
                     {prettyDate(w.date)} · {w.kg.toFixed(1)} kg <span className="text-soft text-xs">{w.source === 'garmin' ? 'Garmin' : ''}</span>
                   </span>
-                  <button className="btn btn-ghost px-3 text-sm" onClick={() => db.weighIns.update(w.id, { deleted: true, updatedAt: Date.now() })} aria-label={`Ta bort ${w.kg} kg`}>
-                    ✕
+                  <button
+                    type="button"
+                    className="btn btn-ghost min-w-11 px-3 text-sm"
+                    onClick={async () => {
+                      await db.weighIns.update(w.id, { deleted: true, updatedAt: Date.now() });
+                      setToast(`${w.kg.toFixed(1).replace('.', ',')} kg borttagen`);
+                    }}
+                    aria-label={`Ta bort ${w.kg} kg`}
+                  >
+                    ✕ Ta bort
                   </button>
                 </li>
               ))}

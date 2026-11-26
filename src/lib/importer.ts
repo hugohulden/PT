@@ -300,7 +300,8 @@ export async function applyImport(p: ImportPayload, opts: { hash: string; source
     }
     for (const w of p.weigh_ins ?? []) {
       const id = `w-${w.date}-${w.kg.toFixed(1)}`;
-      const exists = await db.weighIns.where('date').equals(w.date).filter((x) => Math.abs(x.kg - w.kg) < 0.05 && !x.deleted).count();
+      // Räknar även borttagna: en vikt hon tagit bort ska inte komma tillbaka vid nästa synk
+      const exists = await db.weighIns.where('date').equals(w.date).filter((x) => Math.abs(x.kg - w.kg) < 0.05).count();
       if (!exists) {
         const row: WeighIn = { id, date: w.date, kg: Math.round(w.kg * 10) / 10, source: opts.source === 'garmin' ? 'garmin' : 'import', updatedAt: now };
         await db.weighIns.put(row);
