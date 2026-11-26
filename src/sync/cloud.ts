@@ -1,10 +1,9 @@
 import { createClient, type SupabaseClient, type Session } from '@supabase/supabase-js';
 import { db, SYNCED_TABLES, withoutOutbox, type SyncedTable } from '../db/db';
-import { applyImport, normalizePayload } from '../lib/importer';
 
-// Offline först: allt skrivs lokalt (IndexedDB). När hon är inloggad skickas
-// ändringar (utkorgen) till Supabase och nya rader hämtas hem. Garmin-data som
-// synkjobbet har hämtat ligger i garmin_payloads och importeras här.
+// Valfri molnbackup. Offline först: allt skrivs lokalt (IndexedDB). När hon är
+// inloggad skickas ändringar (utkorgen) till Supabase och nya rader hämtas hem,
+// så att datan finns kvar även om iOS rensar appens lagring eller hon byter telefon.
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -53,9 +52,6 @@ export interface SyncState {
   running: boolean;
   lastSync?: number;
   lastError?: string;
-  garminLastSuccess?: string;
-  garminMessage?: string;
-  garminOk?: boolean;
 }
 
 let state: SyncState = { running: false };
@@ -120,28 +116,9 @@ async function pullRecords() {
   await meta.set('lastPull', newest);
 }
 
-async function pullGarmin() {
-  const since = (await meta.get<string>('lastGarminPayload')) ?? '1970-01-01T00:00:00Z';
-  const { data, error } = await supabase!.from('garmin_payloads').select('id,payload,created_at').gt('created_at', since).order('created_at').limit(200);
-  if (error) throw new Error(error.message);
-  for (const row of data ?? []) {
-    if (!(await db.imports.get(row.id))) {
-      try {
-        await applyImport(normalizePayload(row.payload), { hash: row.id, source: 'garmin', label: `Garmin-synk ${row.created_at.slice(0, 16).replace('T', ' ')}` });
-      } catch (e) {
-        // En tom hämtning (inga nya pass) är inget fel
-        if (!/inga pass/.test((e as Error).message)) throw e;
-      }
-    }
-    await meta.set('lastGarminPayload', row.created_at);
-  }
-  const { data: st } = await supabase!.from('sync_status').select('*').maybeSingle();
-  if (st) emit({ garminLastSuccess: st.last_success ?? undefined, garminMessage: st.message ?? undefined, garminOk: st.ok ?? undefined });
-}
-
 let inflight: Promise<void> | null = null;
 
-/** Skicka lokala ändringar, hämta andras och importera ny Garmin-data. */
+/** Skicka lokala ändringar och hämta ändringar från andra enheter. */
 export function syncNow(): Promise<void> {
   if (!supabase) return Promise.resolve();
   inflight ??= (async () => {
@@ -151,7 +128,6 @@ export function syncNow(): Promise<void> {
     try {
       await pushOutbox(session.user.id);
       await pullRecords();
-      await pullGarmin();
       emit({ lastSync: Date.now() });
       await meta.set('lastSync', Date.now());
     } catch (e) {
@@ -162,13 +138,6 @@ export function syncNow(): Promise<void> {
     }
   })();
   return inflight;
-}
-
-/** Be servern hämta nytt från Garmin direkt (startar synkjobbet). */
-export async function triggerGarminSync(): Promise<boolean> {
-  if (!supabase) return false;
-  const { data, error } = await supabase.functions.invoke('trigger-sync');
-  return !error && !!data?.ok;
 }
 
 export function startAutoSync() {

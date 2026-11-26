@@ -25,10 +25,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install pytest requests && cd sync && python -m pytest -q
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/

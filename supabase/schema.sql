@@ -1,4 +1,4 @@
--- Nellies träningsapp – databasschema för Supabase.
+-- Nellies träningsapp – molnbackup i Supabase (valfritt).
 -- Kör hela filen en gång i Supabase → SQL Editor.
 
 -- Appens data (ett generiskt nyckel/värde-lager per tabell i appen).
@@ -24,36 +24,3 @@ alter table public.records enable row level security;
 drop policy if exists "egna rader" on public.records;
 create policy "egna rader" on public.records
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
--- Data som Garmin-synkjobbet hämtar (skrivs bara av servern, läses av appen).
-create table if not exists public.garmin_payloads (
-  id text primary key,
-  user_id uuid not null references auth.users on delete cascade,
-  payload jsonb not null,
-  created_at timestamptz not null default now()
-);
-create index if not exists garmin_payloads_user_created on public.garmin_payloads (user_id, created_at);
-alter table public.garmin_payloads enable row level security;
-drop policy if exists "läs egna" on public.garmin_payloads;
-create policy "läs egna" on public.garmin_payloads for select using (auth.uid() = user_id);
-
--- Status för "senast synkad".
-create table if not exists public.sync_status (
-  user_id uuid primary key references auth.users on delete cascade,
-  last_run timestamptz,
-  last_success timestamptz,
-  ok boolean,
-  message text,
-  synced_until date
-);
-alter table public.sync_status enable row level security;
-drop policy if exists "läs egen status" on public.sync_status;
-create policy "läs egen status" on public.sync_status for select using (auth.uid() = user_id);
-
--- Garmin-tokens. RLS på utan policyer = bara servern (service role) kommer åt dem.
-create table if not exists public.garmin_tokens (
-  user_id uuid primary key references auth.users on delete cascade,
-  tokens text not null,
-  updated_at timestamptz not null default now()
-);
-alter table public.garmin_tokens enable row level security;

@@ -19,6 +19,8 @@ export interface ImportPayload {
   source?: string;
   activities?: {
     garmin_id?: number | string;
+    /** Id från en annan källa, t.ex. "icu-i12345" från Intervals.icu */
+    source_id?: string;
     type: string;
     name?: string;
     start: string;
@@ -164,13 +166,25 @@ export async function hashText(text: string): Promise<string> {
 const ACT_TYPE: [RegExp, Activity['type']][] = [
   [/swim/i, 'swimming'],
   [/run|löp|jog/i, 'running'],
-  [/strength|styrk|gym/i, 'strength'],
+  [/strength|styrk|gym|weight/i, 'strength'],
   [/walk|hik|prom/i, 'walking'],
 ];
 export const mapActivityType = (t: string): Activity['type'] => ACT_TYPE.find(([re]) => re.test(t))?.[1] ?? 'other';
 
 const activityId = (a: NonNullable<ImportPayload['activities']>[number]) =>
-  a.garmin_id != null ? `garmin-${a.garmin_id}` : `import-${a.start}-${mapActivityType(a.type)}`;
+  a.garmin_id != null ? `garmin-${a.garmin_id}` : a.source_id ? a.source_id : `import-${a.start}-${mapActivityType(a.type)}`;
+
+/** Samma pass från en annan källa (Claude, Intervals.icu): samma typ och start inom 3 min. */
+async function sameActivity(a: NonNullable<ImportPayload['activities']>[number]): Promise<Activity | undefined> {
+  const id = activityId(a);
+  const exact = await db.activities.get(id);
+  if (exact) return exact;
+  const t = new Date(a.start).getTime();
+  const type = mapActivityType(a.type);
+  return (await db.activities.where('date').equals(a.start.slice(0, 10)).toArray()).find(
+    (x) => x.type === type && Math.abs(new Date(x.start).getTime() - t) <= 180_000,
+  );
+}
 
 const garminKeyToExercise = new Map<string, string>();
 for (const e of EXERCISES) if (e.garmin.name && !e.excluded && !garminKeyToExercise.has(e.garmin.name)) garminKeyToExercise.set(e.garmin.name, e.id);
@@ -198,7 +212,7 @@ export async function previewImport(p: ImportPayload, rawText: string): Promise<
   let newA = 0;
   let updA = 0;
   for (const a of p.activities ?? []) {
-    if (await db.activities.get(activityId(a))) updA++;
+    if (await sameActivity(a)) updA++;
     else newA++;
   }
   const unknown = new Set<string>();
@@ -240,24 +254,25 @@ export async function applyImport(p: ImportPayload, opts: { hash: string; source
 
   await db.transaction('rw', [db.activities, db.health, db.weighIns, db.workoutLogs, db.setLogs, db.imports], async () => {
     for (const a of p.activities ?? []) {
-      const id = activityId(a);
-      const prev = await db.activities.get(id);
+      const prev = await sameActivity(a);
+      const id = prev?.id ?? activityId(a);
       const date = a.start.slice(0, 10);
       const pace = a.avg_pace_s_per_km ?? (a.distance_km && a.duration_s ? a.duration_s / a.distance_km : undefined);
       await db.activities.put({
         ...prev,
         id,
-        garminId: a.garmin_id != null ? Number(a.garmin_id) : undefined,
+        garminId: a.garmin_id != null && Number.isFinite(Number(a.garmin_id)) ? Number(a.garmin_id) : prev?.garminId,
         type: mapActivityType(a.type),
-        name: a.name,
+        name: a.name ?? prev?.name,
         start: a.start,
         date,
-        distanceKm: a.distance_km,
-        durationSec: a.duration_s,
-        avgHr: a.avg_hr,
-        maxHr: a.max_hr,
-        paceSecPerKm: pace,
-        sets: a.sets?.map((x) => ({ exercise: x.exercise, reps: x.reps, weightKg: x.weight_kg })),
+        // Behåll befintliga värden om den nya källan saknar dem
+        distanceKm: a.distance_km ?? prev?.distanceKm,
+        durationSec: a.duration_s ?? prev?.durationSec,
+        avgHr: a.avg_hr ?? prev?.avgHr,
+        maxHr: a.max_hr ?? prev?.maxHr,
+        paceSecPerKm: pace ?? prev?.paceSecPerKm,
+        sets: a.sets?.map((x) => ({ exercise: x.exercise, reps: x.reps, weightKg: x.weight_kg })) ?? prev?.sets,
         source: opts.source === 'garmin' ? 'garmin' : opts.source === 'claude' ? 'claude' : 'import',
         beforeApp: date < restart || undefined,
         updatedAt: now,

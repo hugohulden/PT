@@ -21,6 +21,7 @@ import Weight from './pages/Weight';
 import Health from './pages/Health';
 import Badges from './pages/Badges';
 import { startAutoSync } from './sync/cloud';
+import { startIntervalsAutoSync } from './sync/intervals';
 import { registerCustomExercises } from './lib/exercises';
 import { evaluateBadges } from './lib/badges';
 import { matchActivities } from './lib/importer';
@@ -66,6 +67,7 @@ export default function App() {
       .then(() => {
         setReady(true);
         startAutoSync();
+        startIntervalsAutoSync();
       });
     // Be iOS att inte rensa lagringen
     void navigator.storage?.persist?.();
