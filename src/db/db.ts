@@ -89,9 +89,13 @@ export class TrainingDB extends Dexie {
     for (const t of SYNCED_TABLES) {
       const table = this.table(t);
       const pk = table.schema.primKey.keyPath as string;
+      // Köas helt utanför den pågående transaktionen (Safari är strikt med det).
+      // Ett fel här får aldrig stoppa själva ändringen.
       const enqueue = (key: string) => {
         if (!syncEnabled) return;
-        void Dexie.ignoreTransaction(() => this.outbox.add({ table: t, key, at: Date.now() }));
+        setTimeout(() => {
+          this.outbox.add({ table: t, key, at: Date.now() }).catch(() => undefined);
+        }, 0);
       };
       table.hook('creating', function (primKey, obj) {
         enqueue(String(primKey ?? (obj as Record<string, unknown>)[pk]));

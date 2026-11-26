@@ -52,8 +52,12 @@ export default function Weight() {
                     type="button"
                     className="btn btn-ghost min-w-11 px-3 text-sm"
                     onClick={async () => {
-                      await db.weighIns.update(w.id, { deleted: true, updatedAt: Date.now() });
-                      setToast(`${w.kg.toFixed(1).replace('.', ',')} kg borttagen`);
+                      try {
+                        await removeWeigh([w.id]);
+                        setToast(`${w.kg.toFixed(1).replace('.', ',')} kg borttagen`);
+                      } catch (e) {
+                        setToast(`Kunde inte ta bort: ${(e as Error).message}`);
+                      }
                     }}
                     aria-label={`Ta bort ${w.kg} kg`}
                   >
@@ -62,6 +66,17 @@ export default function Weight() {
                 </li>
               ))}
             </ul>
+            <RemoveAll
+              count={weigh.length}
+              onConfirm={async () => {
+                try {
+                  await removeWeigh(weigh.map((w) => w.id));
+                  setToast('Alla invägningar är borttagna');
+                } catch (e) {
+                  setToast(`Kunde inte ta bort: ${(e as Error).message}`);
+                }
+              }}
+            />
           </details>
         )}
       </Section>
@@ -147,5 +162,37 @@ function Photo({ blob, date, onDelete }: { blob: Blob; date: string; onDelete: (
         {confirm ? '✓' : '✕'}
       </button>
     </figure>
+  );
+}
+
+/** Markera som borttagna (så att de inte kommer tillbaka vid synk) och kontrollera att det gick. */
+async function removeWeigh(ids: string[]) {
+  const now = Date.now();
+  await db.transaction('rw', db.weighIns, async () => {
+    for (const id of ids) {
+      const cur = await db.weighIns.get(id);
+      if (cur) await db.weighIns.put({ ...cur, deleted: true, updatedAt: now });
+    }
+  });
+  const still = (await db.weighIns.bulkGet(ids)).filter((x) => x && !x.deleted);
+  if (still.length) throw new Error('databasen sparade inte ändringen');
+}
+
+function RemoveAll({ count, onConfirm }: { count: number; onConfirm: () => void }) {
+  const [ask, setAsk] = useState(false);
+  if (count < 2) return null;
+  return ask ? (
+    <div className="mt-2 grid grid-cols-2 gap-2">
+      <button type="button" className="btn btn-ghost" onClick={() => setAsk(false)}>
+        Avbryt
+      </button>
+      <button type="button" className="btn bg-[#9a1b1b] text-white" onClick={() => (setAsk(false), onConfirm())}>
+        Ja, ta bort {count}
+      </button>
+    </div>
+  ) : (
+    <button type="button" className="btn btn-outline mt-2 w-full" onClick={() => setAsk(true)}>
+      Ta bort alla invägningar
+    </button>
   );
 }
