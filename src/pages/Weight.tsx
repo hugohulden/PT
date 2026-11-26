@@ -40,7 +40,7 @@ export default function Weight() {
         )}
         <p className="text-soft text-sm">Vikten svänger naturligt 1–2 kg från dag till dag. När du bygger muskler och tappar fett kan vikten stå still medan måtten minskar – därför är måtten minst lika viktiga 💖</p>
         {weigh.length > 0 && (
-          <details className="mt-2">
+          <details className="mt-2" open>
             <summary className="text-accent min-h-11 cursor-pointer py-2 font-semibold">Alla invägningar</summary>
             <ul className="space-y-1">
               {[...weigh].sort((a, b) => b.date.localeCompare(a.date)).map((w) => (

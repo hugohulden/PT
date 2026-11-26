@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { db, uid } from '../db/db';
 import { startWorkout, updateSession } from '../db/repo';
 import { useSettings, useToday } from '../hooks';
@@ -198,7 +198,13 @@ export default function Today() {
       <section className="card flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Vikt</h2>
-          <p className="text-soft text-sm">{lastWeigh ? `Senast ${lastWeigh.kg.toFixed(1)} kg (${prettyDate(lastWeigh.date)})` : 'Första invägningen blir ditt startvärde'}</p>
+          {lastWeigh ? (
+            <Link to="/vikt" className="text-soft text-sm underline decoration-dotted underline-offset-2">
+              Senast {lastWeigh.kg.toFixed(1).replace('.', ',')} kg ({prettyDate(lastWeigh.date)}) – ändra
+            </Link>
+          ) : (
+            <p className="text-soft text-sm">Första invägningen blir ditt startvärde</p>
+          )}
         </div>
         <button className="btn btn-primary" onClick={() => setWeighOpen(true)}>
           + Väg in
