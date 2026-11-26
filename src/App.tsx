@@ -28,6 +28,8 @@ import { matchActivities } from './lib/importer';
 import { celebrate } from './lib/fx';
 import { Toast } from './components/ui';
 import InstallGuide from './components/InstallGuide';
+import { APP_VERSION, NewsSheet } from './components/UpdateCheck';
+import { checkRemoteConfig, onAppVersion } from './lib/remoteConfig';
 
 const TABS = [
   { to: '/', label: 'Idag', icon: '🌸', end: true },
@@ -40,6 +42,7 @@ const TABS = [
 export default function App() {
   const [ready, setReady] = useState(false);
   const [badgeToast, setBadgeToast] = useState<string | null>(null);
+  const [news, setNews] = useState<{ changed: string[]; message?: string } | null>(null);
   const settings = useSettings();
   useTheme(settings.theme);
   const active = useLiveQuery(() => db.workoutLogs.where('status').equals('active').count(), []);
@@ -62,12 +65,26 @@ export default function App() {
   }, [ready, dataStamp]);
 
   useEffect(() => {
+    const remote = async () => {
+      const r = await checkRemoteConfig();
+      if (r.changed.length || r.message) setNews(r);
+    };
     ensureInitialized()
+      .then(() => onAppVersion(APP_VERSION))
+      .then(() => remote())
       .then(() => matchActivities())
       .then(() => {
         setReady(true);
         startAutoSync();
         startIntervalsAutoSync();
+        // Kolla Hugos inställningar när appen kommer fram igen (högst var 30:e minut)
+        let last = Date.now();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && Date.now() - last > 30 * 60_000) {
+            last = Date.now();
+            void remote();
+          }
+        });
       });
     // Be iOS att inte rensa lagringen
     void navigator.storage?.persist?.();
@@ -104,6 +121,7 @@ export default function App() {
       </Routes>
       {import.meta.env.VITE_PREVIEW !== '1' && <InstallGuide />}
       <Toast msg={badgeToast} onDone={() => setBadgeToast(null)} />
+      <NewsSheet news={news} onClose={() => setNews(null)} />
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line backdrop-blur-xl safe-bottom"
         style={{ background: 'color-mix(in srgb, var(--surface) 88%, transparent)' }}

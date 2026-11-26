@@ -4,6 +4,7 @@ import { saveSettings } from '../db/repo';
 import { useSettings } from '../hooks';
 import type { HrRange, Settings } from '../lib/types';
 import { Page, Section, Toast } from '../components/ui';
+import UpdateCheck from '../components/UpdateCheck';
 
 export default function SettingsPage() {
   const s = useSettings();
@@ -16,6 +17,8 @@ export default function SettingsPage() {
   return (
     <Page title="Inställningar" back>
       <Toast msg={toast} onDone={() => setToast(null)} />
+
+      <UpdateCheck />
 
       <Section title="Om dig">
         <Field label="Namn">

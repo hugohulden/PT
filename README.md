@@ -61,6 +61,28 @@ Utan detta sparas allt bara i telefonen (och i JSON-backupen under Inställninga
 
 ---
 
+## Ändra något i Nellies plan (för Hugo)
+
+Inställningar som pulstak, loppdatum, veckodagar, stegmål och dagsformsregler styrs från **`public/config.json`**. Ändra direkt på GitHub (pennan ✏️ på filen) och spara:
+
+1. Ändra värdet, t.ex. `"easy": [120, 148]` under `"hr"`.
+2. **Höj `"version"` med 1** – annars märker appen inte ändringen.
+3. Skriv gärna en rad i `"message"`, t.ex. `"Lite lägre pulstak på lugna pass nu 💖"`. Den visas för henne en gång.
+
+Efter ett par minuter (deploy) får hon ändringen nästa gång hon öppnar appen, eller direkt via **Mer → Sök efter uppdateringar**. Bara det du ändrat skrivs över – hennes egna inställningar, klara pass och flyttade pass ligger kvar. Planen räknas om automatiskt.
+
+Ändringar i själva koden (t.ex. långpasstabellen i `src/lib/plan/tables.ts`) når henne på samma sätt: ny version installeras, planen räknas om och hennes gjorda/flyttade pass behålls.
+
+| Nyckel | Vad |
+|---|---|
+| `hr` | Pulstak: `easy`, `long`, `quality` (min, max) |
+| `raceDate`, `week1Start` | Loppdag och måndag i V1 |
+| `weekdays` | Veckodag per pass (1 = mån … 7 = sön) |
+| `deloadWeeks`, `pullupTestWeeks` | Avlastnings- och testveckor |
+| `readiness` | Dagsform: `minSleepH`, `rhrAbsolute`, `rhrAboveAvg`, `rhrMode` (`absolute`/`relative`/`either`) |
+| `easyPaceSec`, `racePaceSec` | Fart i sekunder/km (för Garmin-tider och tempopass) |
+| `steps`, `restSeconds`, `name` | Stegmål/guldnivå, vilotid på gymmet, namn |
+
 ## Arkitektur
 
 ```

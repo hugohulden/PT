@@ -10,3 +10,4 @@ dist-preview
 .pytest_cache
 __pycache__
 garmin_tokens.json
+*.tsbuildinfo

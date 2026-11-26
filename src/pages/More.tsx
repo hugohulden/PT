@@ -1,4 +1,5 @@
 import { MenuLink, Page } from '../components/ui';
+import UpdateCheck from '../components/UpdateCheck';
 
 export default function More() {
   return (
@@ -14,6 +15,7 @@ export default function More() {
         <MenuLink to="/import" icon="📥" label="Importera" hint="Gamla pass, CSV, fritext" />
         <MenuLink to="/installningar" icon="⚙️" label="Inställningar" hint="Datum, pulstak, tema, backup" />
       </div>
+      <UpdateCheck />
     </Page>
   );
 }

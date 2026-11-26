@@ -7,8 +7,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 // BASE_PATH sätts till /pt/ vid deploy till GitHub Pages
 const base = process.env.BASE_PATH ?? '/';
 
+const appVersion = (process.env.GITHUB_SHA ?? 'dev').slice(0, 7);
+
 export default defineConfig({
   base,
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     tailwindcss(),

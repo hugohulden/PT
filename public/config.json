@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "message": "",
+  "settings": {
+    "name": "Nellie",
+    "week1Start": "2026-10-19",
+    "raceDate": "2027-05-22",
+    "raceName": "Göteborgsvarvet",
+    "weekdays": {
+      "gymA": 1,
+      "easy": 2,
+      "gymB": 3,
+      "quality": 4,
+      "swim": 5,
+      "long": 6,
+      "rest": 7
+    },
+    "hr": {
+      "easy": [
+        120,
+        150
+      ],
+      "long": [
+        125,
+        150
+      ],
+      "quality": [
+        154,
+        170
+      ],
+      "maxHr": 193
+    },
+    "easyPaceSec": 470,
+    "racePaceSec": 365,
+    "deloadWeeks": [
+      10,
+      14,
+      18,
+      22,
+      26
+    ],
+    "pullupTestWeeks": [
+      10,
+      14,
+      18,
+      22,
+      26,
+      30
+    ],
+    "readiness": {
+      "minSleepH": 6,
+      "rhrAbsolute": 52,
+      "rhrAboveAvg": 4,
+      "rhrMode": "absolute",
+      "hrvUnbalancedDays": 2,
+      "shortenPct": 30
+    },
+    "restSeconds": 90,
+    "steps": {
+      "goal": 10000,
+      "bonus": 12500
+    }
+  }
+}
